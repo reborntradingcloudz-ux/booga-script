@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
+local CoreGui = (gethui and gethui()) or game:GetService("CoreGui")
 local RS = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 
