@@ -1,23 +1,3 @@
--- // GUI Protection Hook
-local oldIndex
-oldIndex = hookmetamethod(game, "__index", function(self, key)
-    -- If the game tries to destroy or remove our specific GUIs, block it
-    if not checkcaller() and (key == "Destroy" or key == "Remove" or key == "ClearAllChildren") then
-        if self:IsA("ScreenGui") and (self.Name == "Boot" or self.Name == "Auth" or self.Name == "Gamesense") then
-            return function() end -- Ignore the deletion
-        end
-    end
-    return oldIndex(self, key)
-end)
-
--- // Protect the GUI via Executor (if supported)
-local function ProtectGui(gui)
-    if syn and syn.protect_gui then
-        syn.protect_gui(gui)
-    elseif getgenv().protect_gui then
-        getgenv().protect_gui(gui)
-    end
-end
 -- gamesense | Booga Booga Reborn
 print("[olliE] Payload executing...")
 
@@ -25,11 +5,6 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
-local function Protect(gui)
-    gui.Name = tostring(math.random(100000, 999999))
-    if syn and syn.protect_gui then syn.protect_gui(gui) 
-    elseif protect_gui then protect_gui(gui) end
-end
 local RS = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 
@@ -43,26 +18,37 @@ local function New(class, props, parent)
     local obj = Instance.new(class)
     for k, v in pairs(props) do obj[k] = v end
     obj.Parent = parent
+    if class == "ScreenGui" then
+        obj.Name = tostring(math.random(100000, 999999))
+        obj:SetAttribute("BenchProtected", true)
+        pcall(function()
+            if syn and syn.protect_gui then syn.protect_gui(obj) end
+            if protect_gui then protect_gui(obj) end
+            if getgenv().protect_gui then getgenv().protect_gui(obj) end
+        end)
+    end
     return obj
 end
 
+-- Anti-Delete Hook
+pcall(function()
+    local oldIndex
+    oldIndex = hookmetamethod(game, "__index", function(self, key)
+        if not checkcaller() and key == "Destroy" then
+            if self:IsA("ScreenGui") and self:GetAttribute("BenchProtected") then
+                return function() end
+            end
+        end
+        return oldIndex(self, key)
+    end)
+end)
+
 -- // Loader UI
 print("[olliE] Creating Boot UI...")
-local LoaderGui = New("ScreenGui", {Name = "Boot", Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
-ProtectGui(LoaderGui)
+local LoaderGui = New("ScreenGui", {Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
 local LoadFrame = New("Frame", {Size = UDim2.new(0, 400, 0, 150), Position = UDim2.new(0.5, -200, 0.5, -75), BackgroundColor3 = Color3.fromRGB(15, 15, 15), Parent = LoaderGui})
 New("UICorner", {CornerRadius = UDim.new(0, 6)}, LoadFrame)
 local LoadText = New("TextLabel", {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Text = "init...", TextColor3 = Color3.fromRGB(0, 255, 0), Font = Enum.Font.Code, TextSize = 14, Parent = LoadFrame})
-
--- // Persistence Loop (stops the game from deleting the UI)
-task.spawn(function()
-    while task.wait(1) do
-        if not LoaderGui.Parent then
-            print("[olliE] UI was wiped! Re-parenting...")
-            LoaderGui.Parent = CoreGui
-        end
-    end
-end)
 
 task.spawn(function()
     local msg = "init -> loading gamesense modules..."
@@ -79,8 +65,7 @@ end)
 -- // Auth UI
 function LoadKey()
     print("[olliE] Creating Auth UI...")
-    local KeyGui = New("ScreenGui", {Name = "Auth", Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
-ProtectGui(KeyGui)
+    local KeyGui = New("ScreenGui", {Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
     local KFrame = New("Frame", {Size = UDim2.new(0, 300, 0, 160), Position = UDim2.new(0.5, -150, 0.5, -80), BackgroundColor3 = Color3.fromRGB(20, 20, 20), Parent = KeyGui})
     New("UICorner", {CornerRadius = UDim.new(0, 6)}, KFrame)
     New("TextLabel", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1, Text = "gamesense | auth", TextColor3 = Color3.fromRGB(0, 255, 0), Font = Enum.Font.GothamBold, TextSize = 16, Parent = KFrame})
@@ -108,8 +93,7 @@ end
 -- // Main UI
 function LoadMain()
     print("[olliE] Creating Main UI...")
-    local UI = New("ScreenGui", {Name = "Gamesense", Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
-ProtectGui(UI)
+    local UI = New("ScreenGui", {Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
     local Main = New("Frame", {Size = UDim2.new(0, 580, 0, 400), Position = UDim2.new(0.5, -290, 0.5, -200), BackgroundColor3 = Color3.fromRGB(15, 15, 15), Active = true, Draggable = true, Parent = UI})
     New("UICorner", {CornerRadius = UDim.new(0, 8)}, Main)
     New("UIStroke", {Color = Color3.fromRGB(35, 35, 35)}, Main)
@@ -160,6 +144,4 @@ ProtectGui(UI)
 
     Pages["Farming"].Visible = true
     print("[olliE] Main UI fully loaded.")
-    
-    -- (Logic loops go here, same as before)
 end
