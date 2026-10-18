@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local CoreGui = (gethui and gethui()) or game:GetService("CoreGui")
+local CoreGui = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 local RS = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 
@@ -36,7 +36,7 @@ local function New(class, props, parent)
 end
 
 -- // Loader
-local LoaderGui = New("ScreenGui", {Name = "Boot", Parent = CoreGui, ResetOnSpawn = false})
+local LoaderGui = New("ScreenGui", {Name = "Boot", Parent = CoreGui, ResetOnSpawn = false, DisplayOrder = 999})
 local LoadFrame = New("Frame", {Size = UDim2.new(0, 400, 0, 150), Position = UDim2.new(0.5, -200, 0.5, -75), BackgroundColor3 = Color3.fromRGB(15, 15, 15), Parent = LoaderGui})
 New("UICorner", {CornerRadius = UDim.new(0, 6)}, LoadFrame)
 New("UIStroke", {Color = Color3.fromRGB(40, 40, 40)}, LoadFrame)
