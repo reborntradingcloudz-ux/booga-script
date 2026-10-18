@@ -4,7 +4,12 @@ print("[olliE] Payload executing...")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local CoreGui = gethui and gethui() or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+local CoreGui = game:GetService("CoreGui")
+local function Protect(gui)
+    gui.Name = tostring(math.random(100000, 999999))
+    if syn and syn.protect_gui then syn.protect_gui(gui) 
+    elseif protect_gui then protect_gui(gui) end
+end
 local RS = game:GetService("ReplicatedStorage")
 local LP = Players.LocalPlayer
 
